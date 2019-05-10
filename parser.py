@@ -172,14 +172,14 @@ def load_data(data_folder):
             for i, _snp in enumerate(snps):
                 variant = {}
                 variant["_id"] = _snp
-                variant['gwascatalog'] = {"association": {'efo': {}, 'study': {}}}
+                variant['gwascatalog'] = {"associations": {'efo': {}, 'study': {}}}
                 if not HGVS:
                     variant["gwascatalog"]["rsid"] = _snp
-                variant['gwascatalog']['association']['snps'] = snps
-                variant['gwascatalog']['association']['pubmed'] = int(row['PUBMEDID'])
-                variant['gwascatalog']['association']['date_added'] = row['DATE ADDED TO CATALOG']
-                variant['gwascatalog']['association']['study']['name'] = row['STUDY']
-                variant['gwascatalog']['association']['trait'] = row['DISEASE/TRAIT']
+                variant['gwascatalog']['associations']['snps'] = snps
+                variant['gwascatalog']['associations']['pubmed'] = int(row['PUBMEDID'])
+                variant['gwascatalog']['associations']['date_added'] = row['DATE ADDED TO CATALOG']
+                variant['gwascatalog']['associations']['study']['name'] = row['STUDY']
+                variant['gwascatalog']['associations']['trait'] = row['DISEASE/TRAIT']
                 variant['gwascatalog']['region'] = region[i] if region else None
                 if not chrom:
                     chrom = [''] * 10 
@@ -189,13 +189,13 @@ def load_data(data_folder):
                 variant['gwascatalog']['pos'] = position[i] if position else None
                 variant['gwascatalog']['gene'] = genes[i].split(',') if (genes and genes[i]) else None
                 variant['gwascatalog']['context'] = context[i] if context else None
-                variant['gwascatalog']['association']['raf'] = str2float(row['RISK ALLELE FREQUENCY'])
-                variant['gwascatalog']['association']['p_val'] = str2float(row['P-VALUE'])
+                variant['gwascatalog']['associations']['raf'] = str2float(row['RISK ALLELE FREQUENCY'])
+                variant['gwascatalog']['associations']['p_val'] = str2float(row['P-VALUE'])
                 # variant['gwascatalog']['p_val_mlog'] = str2float(row['PVALUE_MLOG'])
-                variant['gwascatalog']['association']['study']['platform'] = row['PLATFORM [SNPS PASSING QC]']
-                variant['gwascatalog']['association']['study']['accession'] = row['STUDY ACCESSION']
-                variant['gwascatalog']['association']['efo']['name'] = row['MAPPED_TRAIT'].split(',')
-                variant['gwascatalog']['association']['efo']['id'] = [_item.split('/')[-1] for _item in row['MAPPED_TRAIT_URI'].split(',')]
+                variant['gwascatalog']['associations']['study']['platform'] = row['PLATFORM [SNPS PASSING QC]']
+                variant['gwascatalog']['associations']['study']['accession'] = row['STUDY ACCESSION']
+                variant['gwascatalog']['associations']['efo']['name'] = row['MAPPED_TRAIT'].split(',')
+                variant['gwascatalog']['associations']['efo']['id'] = [_item.split('/')[-1].replace('_', ':') for _item in row['MAPPED_TRAIT_URI'].split(',')]
                 variant = dict_sweep(unlist(value_convert_to_number(variant, skipped_keys=['chrom'])), vals=[[], {}, None, '', 'NR'])
                 results[variant["_id"]].append(variant)
         # Merge duplications
@@ -207,7 +207,10 @@ def load_data(data_folder):
                     v[0]["_id"] = hgvs_rsid_dict[v[0]["_id"]]
                     yield v[0]
                 else:
-                    yield {
-                        '_id': hgvs_rsid_dict[v[0]['_id']],
-                        'gwascatalog': [i['gwascatalog'] for i in v]
-                    }
+                    doc = {'_id': hgvs_rsid_dict[v[0]['_id']],
+                           'gwascatalog': {'associations': []}}
+                    for _item in ['gene', 'region', 'pos', 'context', 'rsid']:
+                        if _item in v[0]['gwascatalog']:
+                            doc['gwascatalog'][_item] = v[0]['gwascatalog'][_item]
+                    doc['gwascatalog']['associations'] = [i['gwascatalog']['associations'] for i in v]
+                    yield doc

@@ -1,0 +1,16 @@
+{
+    "version": "0.2",
+    "__metadata__" : {
+        "license_url" : "https://www.ebi.ac.uk/gwas/docs/file-downloads",
+        "licence" : "CC BY-NC 4.0",
+        "url" : "https://www.ebi.ac.uk/gwas/api/search/downloads/alternative"
+    },
+    "dumper" : {
+        "data_url" : "https://www.ebi.ac.uk/gwas/api/search/downloads/alternative",
+        "uncompress" : false
+    },
+    "uploader" : {
+        "parser" : "parser:load_data",
+        "on_duplicates" : "ignore"
+    }
+}
