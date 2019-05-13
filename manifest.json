@@ -13,5 +13,5 @@
         "parser" : "parser:load_data",
         "on_duplicates" : "ignore"
     },
-    "requires": ["biothings_client"]
+    "requires": ["biothings_client==0.2.0"]
 }
