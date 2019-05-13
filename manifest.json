@@ -12,5 +12,6 @@
     "uploader" : {
         "parser" : "parser:load_data",
         "on_duplicates" : "ignore"
-    }
+    },
+    "requires": ["biothings_client"]
 }
