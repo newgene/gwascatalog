@@ -90,9 +90,9 @@ def str2float(item):
         try:
             return float(item)
         except ValueError:
-            return item
+            return None
     else:
-        return item
+        return None
 
 
 def reorganize_field(field_value, seperator, num_snps):
@@ -191,7 +191,7 @@ def load_data(data_folder):
                 variant['gwascatalog']['gene'] = genes[i].split(',') if (genes and genes[i]) else None
                 variant['gwascatalog']['context'] = context[i] if context else None
                 variant['gwascatalog']['associations']['raf'] = str2float(row['RISK ALLELE FREQUENCY'])
-                variant['gwascatalog']['associations']['p_val'] = str2float(row['P-VALUE'])
+                variant['gwascatalog']['associations']['pval'] = str2float(row['P-VALUE'])
                 # variant['gwascatalog']['p_val_mlog'] = str2float(row['PVALUE_MLOG'])
                 variant['gwascatalog']['associations']['study']['platform'] = row['PLATFORM [SNPS PASSING QC]']
                 variant['gwascatalog']['associations']['study']['accession'] = row['STUDY ACCESSION']
