@@ -1,7 +1,7 @@
 import os
 import unicodedata
 from collections import defaultdict
-#from biothings_client import get_client
+from biothings_client import get_client
 import requests
 import re
 
