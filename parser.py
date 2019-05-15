@@ -123,7 +123,7 @@ def reorganize_field(field_value, seperator, num_snps):
 
 def load_data(data_folder):
 
-    input_file = os.path.join(data_folder,"gwas_catalog_v1.0.2-associations_e96_r2019-04-21.tsv")
+    input_file = os.path.join(data_folder, "alternative")
     assert os.path.exists(input_file), "Can't find input file '%s'" % input_file
     with open_anyfile(input_file) as in_f:
 
