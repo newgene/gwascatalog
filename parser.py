@@ -71,12 +71,8 @@ def batch_query_hgvs_from_rsid(rsid_list):
             batch = rsid_list[i: i+1000]
         else:
             batch = rsid_list[i:]
-        """
         params = ','.join(batch)
         res = variant_client.getvariants(params, fields="_id")
-        """
-        data = {"_id": ','.join(batch), "fields": "_id"}
-        res = requests.post('http://myvariant.info/v1/variant', data=data).json()
         print("currently processing {}th variant".format(i))
         for _doc in res:
             if '_id' not in _doc:
