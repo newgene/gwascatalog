@@ -4,14 +4,14 @@ from collections import defaultdict
 from biothings_client import get_client
 import requests
 import re
-
+from myvariant.src.utils.hgvs import get_hgvs_from_vcf
 from csv import DictReader
 from biothings.utils.dataload import dict_sweep, open_anyfile, unlist, value_convert_to_number
 
 
 CHROM_LIST = [str(i) for i in range(1, 23)] + ['x', 'y']
 
-
+"""
 def get_hgvs_from_vcf(chr, pos, ref, alt, mutant_type=None):
     '''get a valid hgvs name from VCF-style "chr, pos, ref, alt" data.'''
     if not (re.match('^[ACGTN]+$', ref) and re.match('^[ACGTN*]+$', alt)):
@@ -59,6 +59,7 @@ def get_hgvs_from_vcf(chr, pos, ref, alt, mutant_type=None):
         return hgvs, var_type
     else:
         return hgvs
+"""
 
 
 def batch_query_hgvs_from_rsid(rsid_list):
