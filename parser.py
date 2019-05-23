@@ -62,7 +62,6 @@ def get_hgvs_from_vcf(chr, pos, ref, alt, mutant_type=None):
 
 def batch_query_hgvs_from_rsid(rsid_list):
     hgvs_rsid_dict = {}
-    print('total rsids: {}'.format(len(rsid_list)))
     rsid_list = list(set(rsid_list))
     variant_client = get_client('variant')
     for i in range(0, len(rsid_list), 1000):
@@ -72,7 +71,7 @@ def batch_query_hgvs_from_rsid(rsid_list):
             batch = rsid_list[i:]
         params = ','.join(batch)
         res = variant_client.getvariants(params, fields="_id")
-        print("currently processing {}th variant".format(i))
+        # print("currently processing {}th variant".format(i))
         for _doc in res:
             if '_id' not in _doc:
                 print('can not convert', _doc)
@@ -153,7 +152,6 @@ def load_data(data_folder):
         header = next(in_f).strip().split('\t')
         lines = set(list(in_f))
         reader = DictReader(lines, fieldnames=header, delimiter='\t')
-
         results = defaultdict(list)
         rsid_list = []
         for row in reader:
@@ -161,6 +159,7 @@ def load_data(data_folder):
             if rsids:
                 rsid_list += rsids
         hgvs_rsid_dict = batch_query_hgvs_from_rsid(rsid_list)
+        reader = DictReader(lines, fieldnames=header, delimiter='\t')
         for row in reader:
             variant = {}
             HGVS = False
@@ -206,7 +205,7 @@ def load_data(data_folder):
                 variant['gwascatalog']['associations']['efo']['name'] = row['MAPPED_TRAIT'].split(',')
                 variant['gwascatalog']['associations']['efo']['id'] = [_item.split('/')[-1].replace('_', ':') for _item in row['MAPPED_TRAIT_URI'].split(',')]
                 variant = dict_sweep(unlist(value_convert_to_number(variant, skipped_keys=['chrom'])), vals=[[], {}, None, '', 'NR'])
-                results[variant["_id"]].append(variant)        
+                results[variant["_id"]].append(variant)
         for v in results.values():
             if len(v) == 1:
                 yield v[0]
