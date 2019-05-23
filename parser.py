@@ -208,14 +208,13 @@ def load_data(data_folder):
                 variant = dict_sweep(unlist(value_convert_to_number(variant, skipped_keys=['chrom'])), vals=[[], {}, None, '', 'NR'])
                 results[variant["_id"]].append(variant)        
         for v in results.values():
-            if v[0]["_id"] in hgvs_rsid_dict and hgvs_rsid_dict[v[0]["_id"]]:
-                if len(v) == 1:
-                    yield v[0]
-                else:
-                    doc = {'_id': v[0]['_id'],
-                           'gwascatalog': {'associations': []}}
-                    for _item in ['gene', 'region', 'pos', 'context', 'rsid']:
-                        if _item in v[0]['gwascatalog']:
-                            doc['gwascatalog'][_item] = v[0]['gwascatalog'][_item]
-                    doc['gwascatalog']['associations'] = [i['gwascatalog']['associations'] for i in v]
-                    yield doc
+            if len(v) == 1:
+                yield v[0]
+            else:
+                doc = {'_id': v[0]['_id'],
+                       'gwascatalog': {'associations': []}}
+                for _item in ['gene', 'region', 'pos', 'context', 'rsid']:
+                    if _item in v[0]['gwascatalog']:
+                        doc['gwascatalog'][_item] = v[0]['gwascatalog'][_item]
+                doc['gwascatalog']['associations'] = [i['gwascatalog']['associations'] for i in v]
+                yield doc
