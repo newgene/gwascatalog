@@ -1,9 +1,6 @@
 import os
-import unicodedata
 from collections import defaultdict
 from biothings_client import get_client
-import requests
-import re
 # create symbolic link of myvariant.info repo first
 from myvariant.src.utils.hgvs import get_hgvs_from_vcf
 from csv import DictReader
@@ -70,7 +67,7 @@ def batch_query_hgvs_from_rsid(rsid_list):
     variant_client = get_client('variant')
     for i in range(0, len(rsid_list), 1000):
         if i + 1000 <= len(rsid_list):
-            batch = rsid_list[i: i+1000]
+            batch = rsid_list[i: i + 1000]
         else:
             batch = rsid_list[i:]
         params = ','.join(batch)
@@ -119,10 +116,36 @@ def reorganize_field(field_value, seperator, num_snps):
             print('new value', new_value, num_snps)
 
 
-def load_data(data_folder):
+def parse_separator_and_snps(row):
+    seperator = None
+    snps = None
+    if row["SNPS"].startswith("rs"):
+        if "x" in row["SNPS"]:
+            snps = [_item.strip() for _item in row["SNPS"].split('x')]
+            seperator = "x"
+        elif ";" in row["SNPS"]:
+            snps = [_item.strip() for _item in row["SNPS"].split(';')]
+            seperator = ";"
+        elif row["SNPS"]:
+            snps = [row["SNPS"]]
+    else:
+        row["SNPS"] = row["SNPS"].replace('_', ":").replace('-', ':').split(':')
+        if len(row["SNPS"]) == 4:
+            HGVS = True
+            chrom, pos, ref, alt = row["SNPS"]
+            chrom = str(chrom).replace('chr', '')
+            try:
+                snps = [get_hgvs_from_vcf(chrom, pos, ref, alt)]
+            except ValueError:
+                print(row["SNPS"])
+        else:
+            print(row["SNPS"])
+    return (snps, seperator)
 
-    #input_file = os.path.join(data_folder, "alternative")
-    input_file = os.path.join(data_folder, "gwas_catalog_v1.0.2-associations_e96_r2019-04-21.tsv")
+
+def load_data(data_folder):
+    input_file = os.path.join(data_folder, "alternative")
+    # input_file = os.path.join(data_folder, "gwas_catalog_v1.0.2-associations_e96_r2019-04-21.tsv")
     assert os.path.exists(input_file), "Can't find input file '%s'" % input_file
     with open_anyfile(input_file) as in_f:
 
@@ -132,36 +155,18 @@ def load_data(data_folder):
         reader = DictReader(lines, fieldnames=header, delimiter='\t')
 
         results = defaultdict(list)
+        rsid_list = []
+        for row in reader:
+            rsids, _ = parse_separator_and_snps(row)
+            if rsids:
+                rsid_list += rsids
+        hgvs_rsid_dict = batch_query_hgvs_from_rsid(rsid_list)
         for row in reader:
             variant = {}
-
-            # Use gDNA as variant identifier
-            snps = []
             HGVS = False
-            seperator = None
-            if row["SNPS"].startswith("rs"):
-                if "x" in row["SNPS"]:
-                    snps = [_item.strip() for _item in row["SNPS"].split('x')]
-                    seperator = "x"
-                elif ";" in row["SNPS"]:
-                    snps = [_item.strip() for _item in row["SNPS"].split(';')]
-                    seperator = ";"
-                elif row["SNPS"]:
-                    snps = [row["SNPS"]]
-            else:
-                row["SNPS"] = row["SNPS"].replace('_', ":").replace('-', ':').split(':')
-                if len(row["SNPS"]) == 4:
-                    HGVS = True
-                    chrom, pos, ref, alt = row["SNPS"]
-                    chrom = str(chrom).replace('chr', '')
-                    try:
-                        snps = [get_hgvs_from_vcf(chrom, pos, ref, alt)]
-                    except ValueError:
-                        print(row["SNPS"])
-                        continue
-                else:
-                    print(row["SNPS"])
-                    continue
+            snps, seperator = parse_separator_and_snps(row)
+            if not snps:
+                continue
             region = reorganize_field(row["REGION"], seperator, len(snps))
             chrom = reorganize_field(row["CHR_ID"], seperator, len(snps))
             genes = reorganize_field(row["REPORTED GENE(S)"],
@@ -175,7 +180,7 @@ def load_data(data_folder):
                                        len(snps))
             for i, _snp in enumerate(snps):
                 variant = {}
-                variant["_id"] = _snp
+                variant["_id"] = hgvs_rsid_dict[_snp]
                 variant['gwascatalog'] = {"associations": {'efo': {}, 'study': {}}}
                 if not HGVS:
                     variant["gwascatalog"]["rsid"] = _snp
@@ -186,7 +191,7 @@ def load_data(data_folder):
                 variant['gwascatalog']['associations']['trait'] = row['DISEASE/TRAIT']
                 variant['gwascatalog']['region'] = region[i] if region else None
                 if not chrom:
-                    chrom = [''] * 10 
+                    chrom = [''] * 10
                 elif str(chrom[i]).lower() not in CHROM_LIST:
                     chrom[i] = ''
                 variant['gwascatalog']['chrom'] = chrom[i] if chrom else None
@@ -201,17 +206,13 @@ def load_data(data_folder):
                 variant['gwascatalog']['associations']['efo']['name'] = row['MAPPED_TRAIT'].split(',')
                 variant['gwascatalog']['associations']['efo']['id'] = [_item.split('/')[-1].replace('_', ':') for _item in row['MAPPED_TRAIT_URI'].split(',')]
                 variant = dict_sweep(unlist(value_convert_to_number(variant, skipped_keys=['chrom'])), vals=[[], {}, None, '', 'NR'])
-                results[variant["_id"]].append(variant)
-        # Merge duplications
-        rsid_list = [_item for _item in results.keys()]
-        hgvs_rsid_dict = batch_query_hgvs_from_rsid(rsid_list)
+                results[variant["_id"]].append(variant)        
         for v in results.values():
             if v[0]["_id"] in hgvs_rsid_dict and hgvs_rsid_dict[v[0]["_id"]]:
                 if len(v) == 1:
-                    v[0]["_id"] = hgvs_rsid_dict[v[0]["_id"]]
                     yield v[0]
                 else:
-                    doc = {'_id': hgvs_rsid_dict[v[0]['_id']],
+                    doc = {'_id': v[0]['_id'],
                            'gwascatalog': {'associations': []}}
                     for _item in ['gene', 'region', 'pos', 'context', 'rsid']:
                         if _item in v[0]['gwascatalog']:
