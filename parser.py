@@ -179,7 +179,10 @@ def load_data(data_folder):
                                        len(snps))
             for i, _snp in enumerate(snps):
                 variant = {}
-                variant["_id"] = hgvs_rsid_dict[_snp]
+                if _snp in hgvs_rsid_dict:
+                    variant["_id"] = hgvs_rsid_dict[_snp]
+                else:
+                    continue
                 variant['gwascatalog'] = {"associations": {'efo': {}, 'study': {}}}
                 if not HGVS:
                     variant["gwascatalog"]["rsid"] = _snp
