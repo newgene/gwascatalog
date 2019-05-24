@@ -125,6 +125,9 @@ def parse_separator_and_snps(row):
         elif ";" in row["SNPS"]:
             snps = [_item.strip() for _item in row["SNPS"].split(';')]
             seperator = ";"
+        elif "," in row["SNPS"]:
+            snps = [_item.strip() for _item in row["SNPS"].split(',')]
+            seperator = ","
         elif row["SNPS"]:
             snps = [row["SNPS"]]
     else:
