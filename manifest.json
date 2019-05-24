@@ -1,5 +1,6 @@
 {
     "version": "0.2",
+    "requires": "biothings_client",
     "__metadata__" : {
         "license_url" : "https://www.ebi.ac.uk/gwas/docs/file-downloads",
         "licence" : "CC BY-NC 4.0",
@@ -11,6 +12,7 @@
         "release" : "version:get_release"
     },
     "uploader" : {
-        "parser" : "parser:load_data"
+        "parser" : "parser:load_data",
+        "on_duplicates": "error"
     }
 }
