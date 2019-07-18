@@ -2,9 +2,9 @@
     "version": "0.2",
     "requires": "biothings_client",
     "__metadata__" : {
-        "license_url" : "https://www.ebi.ac.uk/gwas/docs/file-downloads",
-        "licence" : "CC BY-NC 4.0",
-        "url" : "https://www.ebi.ac.uk/gwas/api/search/downloads/alternative"
+        "license_url" : "https://www.ebi.ac.uk/about/terms-of-use",
+        "licence" : "EBI terms of use",
+        "url" : "https://www.ebi.ac.uk/gwas/"
     },
     "dumper" : {
         "data_url" : "https://www.ebi.ac.uk/gwas/api/search/downloads/alternative",
